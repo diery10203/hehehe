@@ -590,3 +590,104 @@ index.html
     </div>
 </body>
 </html>
+
+sql
+-- ============================================
+-- SQL SCRIPT - CRUD APARTMENT VỚI BIGDECIMAL
+-- Database: apartment_db (MariaDB)
+-- ============================================
+
+CREATE DATABASE IF NOT EXISTS apartment_db;
+USE apartment_db;
+
+-- ============================================
+-- TẠO BẢNG users (2 roles: ADMIN, CUSTOMER)
+-- ============================================
+DROP TABLE IF EXISTS apartments;
+DROP TABLE IF EXISTS buildings;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER' CHECK (role IN ('ADMIN', 'CUSTOMER'))
+);
+
+-- ============================================
+-- TẠO BẢNG buildings (phải tạo trước)
+-- ============================================
+CREATE TABLE buildings (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    address VARCHAR(500) NOT NULL
+);
+
+-- ============================================
+-- TẠO BẢNG apartments (có quan hệ với buildings)
+-- ============================================
+CREATE TABLE apartments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    apartment_number VARCHAR(50) NOT NULL,
+    area DOUBLE NOT NULL,
+    price DECIMAL(19,2) NOT NULL,  -- Dùng DECIMAL cho BigDecimal
+    status VARCHAR(20) NOT NULL,
+    building_id BIGINT NOT NULL,
+    FOREIGN KEY (building_id) REFERENCES buildings(id) ON DELETE CASCADE
+);
+
+-- ============================================
+-- INSERT USERS
+-- Password: 123456 (BCrypt: $2a$10$Ellwswcd53pvEzPxZzepd.jYQLjVilOUC7xpS0ZurnaWJ0D5KdA0y)
+-- ============================================
+INSERT INTO users (first_name, last_name, username, password, role) VALUES
+('Admin', 'System', 'admin', '$2a$10$Ellwswcd53pvEzPxZzepd.jYQLjVilOUC7xpS0ZurnaWJ0D5KdA0y', 'ADMIN'),
+('Nguyễn', 'Văn An', 'customer1', '$2a$10$Ellwswcd53pvEzPxZzepd.jYQLjVilOUC7xpS0ZurnaWJ0D5KdA0y', 'CUSTOMER'),
+('Trần', 'Thị Bình', 'customer2', '$2a$10$Ellwswcd53pvEzPxZzepd.jYQLjVilOUC7xpS0ZurnaWJ0D5KdA0y', 'CUSTOMER');
+
+-- ============================================
+-- INSERT BUILDINGS
+-- ============================================
+INSERT INTO buildings (name, address) VALUES
+('Tòa nhà A', '123 Đường ABC, Quận 1, TP.HCM'),
+('Tòa nhà B', '456 Đường XYZ, Quận 2, TP.HCM'),
+('Tòa nhà C', '789 Đường DEF, Quận 3, TP.HCM'),
+('Tòa nhà D', '321 Đường GHI, Quận 4, TP.HCM'),
+('Tòa nhà E', '654 Đường JKL, Quận 5, TP.HCM');
+
+-- ============================================
+-- INSERT APARTMENTS
+-- ============================================
+INSERT INTO apartments (apartment_number, area, price, status, building_id) VALUES
+('A101', 50.5, 5000000.00, 'AVAILABLE', 1),
+('A102', 60.0, 6000000.00, 'RENTED', 1),
+('A201', 70.5, 7000000.00, 'AVAILABLE', 1),
+('A301', 80.0, 8000000.00, 'AVAILABLE', 1),
+('B101', 55.0, 5500000.00, 'AVAILABLE', 2),
+('B102', 65.0, 6500000.00, 'SOLD', 2),
+('B201', 75.0, 7500000.00, 'RENTED', 2),
+('C101', 90.0, 9000000.00, 'AVAILABLE', 3),
+('C201', 100.0, 10000000.00, 'AVAILABLE', 3),
+('D101', 45.0, 4500000.00, 'RENTED', 4),
+('E101', 85.0, 8500000.00, 'AVAILABLE', 5);
+
+-- ============================================
+-- THÔNG TIN ĐĂNG NHẬP
+-- ============================================
+-- ADMIN: admin / 123456
+-- CUSTOMER: customer1 / 123456, customer2 / 123456
+
+-- ============================================
+-- QUERY TEST
+-- ============================================
+SELECT * FROM users;
+SELECT * FROM buildings;
+SELECT * FROM apartments;
+
+-- Xem căn hộ kèm tên tòa nhà
+SELECT a.id, a.apartment_number, a.area, a.price, a.status, b.name as building_name
+FROM apartments a
+JOIN buildings b ON a.building_id = b.id;
+
